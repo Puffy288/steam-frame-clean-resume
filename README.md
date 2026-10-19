@@ -12,7 +12,7 @@ Unofficial installer for keeping the SteamVR dashboard closed on resume. *Create
 
 ## Install
 
-1. On your **Frame**, download **Steam-Frame-Resume-Install.run** from this project’s **Releases** and save it in **Downloads**.
+1. On your **Frame**, select [**Download Steam-Frame-Resume-Install.run**](https://github.com/Puffy288/steam-frame-clean-resume/releases/download/v0.1.0/Steam-Frame-Resume-Install.run) and save it in **Downloads**.
 2. Open **Konsole**, then copy and paste this whole command:
 
 ```bash
