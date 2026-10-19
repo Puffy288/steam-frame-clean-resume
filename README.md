@@ -4,7 +4,7 @@ You’re in your relaxing environment of choice. You need to get up and do somet
 
 I don’t want to come back to a menu. I want to be right back in the nice chill environment where I left off.
 
-**Steam Frame Clean Resume** takes you straight back to your running environment when you wake, with the dashboard closed. It’s especially handy if your controllers aren’t nearby: you don’t have to go find one and turn it on just to close the menu. The **Steam button** still brings up the dashboard whenever you want it.
+**Steam Frame Clean Resume** takes you straight back to your running environment when you wake, with the dashboard closed. The **Steam button** still brings up the dashboard whenever you want it.
 
 **Theater mode and floating windows are not affected.** If you put the Frame to sleep while playing a game in theater mode, your theater screen and floating windows are still there, ready to go when you resume. It only closes the dashboard. It does not close your game, theater mode or floating windows.
 
