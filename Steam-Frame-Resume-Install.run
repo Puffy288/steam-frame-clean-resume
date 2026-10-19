@@ -1,0 +1,218 @@
+#!/bin/bash
+# Steam Frame resume dashboard helper — unofficial, user-local and reversible.
+# This is plain-text source. It makes no internet requests and needs no sudo.
+# Install: bash ~/Downloads/Steam-Frame-Resume-Install.run
+# Remove:  bash ~/.local/share/frame-resume-dashboard/uninstall.sh
+set -euo pipefail
+if [[ $EUID == 0 ]]; then
+    echo 'Run this as your normal Frame user, without sudo.' >&2
+    exit 1
+fi
+umask 077
+stage_dir=$(mktemp -d /tmp/frame-resume-dashboard.XXXXXXXX)
+trap 'rm -rf -- "$stage_dir"' EXIT
+cat > "$stage_dir/resume-dashboard.py" <<'FRAME_RESUME_PAYLOAD_0_END'
+#!/usr/bin/python3
+"""Close Steam's automatic post-suspend dashboard once; never inhibit sleep."""
+import os
+from pathlib import Path
+import subprocess
+
+import dbus
+from dbus.mainloop.glib import DBusGMainLoop
+from gi.repository import Gio, GLib
+
+LOG = Path.home() / ".local/share/Steam/logs/vrwebhelper_systemui.txt"
+COMMAND = Path("/opt/steamvr/bin/linuxarm64/vrcmd")
+RESUME_DELAY_MS = 1
+
+
+class ResumeDashboard:
+    def __init__(self):
+        self.file = None
+        self.monitor = None
+        self.pending = 0
+        self.active = False
+        self.partial = b""
+
+    def stop(self, reason=None):
+        self.active = False
+        for name in ("pending",):
+            source = getattr(self, name)
+            if source:
+                GLib.source_remove(source)
+                setattr(self, name, 0)
+        if self.monitor:
+            self.monitor.cancel()
+            self.monitor = None
+        if self.file:
+            self.file.close()
+            self.file = None
+        self.partial = b""
+        if reason:
+            print(reason, flush=True)
+
+    def sleep_changed(self, sleeping):
+        if sleeping:
+            self.stop()
+            try:
+                self.file = LOG.open("rb")
+                self.file.seek(0, os.SEEK_END)
+            except OSError as error:
+                self.stop(f"Skipping this cycle: cannot read SteamVR log ({error}).")
+            return
+        # A service start, duplicate signal or screen-off event must not close UI.
+        if self.file is None or self.active:
+            return
+        try:
+            self.monitor = Gio.File.new_for_path(str(LOG)).monitor_file(
+                Gio.FileMonitorFlags.NONE, None)
+            self.monitor.set_rate_limit(0)
+            self.monitor.connect("changed", self.changed)
+            self.active = True
+            self.pending = GLib.timeout_add(RESUME_DELAY_MS, self.close_once)
+            print("Resume detected; closing the dashboard immediately.", flush=True)
+            self.drain()
+        except (OSError, GLib.Error) as error:
+            self.stop(f"Skipping this cycle: {error}")
+
+    def changed(self, *_):
+        self.drain()
+
+    def drain(self):
+        if not self.active:
+            return
+        try:
+            disk = LOG.stat()
+            opened = os.fstat(self.file.fileno())
+            if (disk.st_dev, disk.st_ino) != (opened.st_dev, opened.st_ino):
+                self.stop("Skipped: SteamVR log rotated.")
+                return
+            if disk.st_size < self.file.tell():
+                self.stop("Skipped: SteamVR log was reset.")
+                return
+            data = self.partial + self.file.read(131073)
+            if len(data) > 131072:
+                self.stop("Skipped: unusually large log update.")
+                return
+            lines = data.split(b"\n")
+            self.partial = lines.pop()
+            for raw in lines:
+                line = raw.decode("utf-8", "replace")
+                if "[Dashboard] [ToggleDashboard]" in line or "[Dashboard] [HideDashboard]" in line:
+                    self.stop("Skipped: dashboard was already used or closed.")
+                    return
+        except OSError as error:
+            self.stop(f"Skipped: log read failed ({error}).")
+
+    def close_once(self):
+        self.pending = 0
+        # Check for a last-moment Steam-button action before sending the request.
+        self.drain()
+        if not self.active:
+            return GLib.SOURCE_REMOVE
+        self.stop()
+        try:
+            result = subprocess.run(
+                [str(COMMAND), "--background", "--hidedashboard"],
+                capture_output=True, text=True, timeout=3, check=False)
+            if result.returncode == 0:
+                print("Sent one dashboard-close request. Idle until the next suspend/resume.", flush=True)
+            else:
+                print(f"Close request failed (exit {result.returncode}); no retry.", flush=True)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            print(f"Close request failed ({error}); no retry.", flush=True)
+        return GLib.SOURCE_REMOVE
+
+def main():
+    DBusGMainLoop(set_as_default=True)
+    helper = ResumeDashboard()
+    bus = dbus.SystemBus()
+    bus.add_signal_receiver(
+        helper.sleep_changed,
+        signal_name="PrepareForSleep",
+        dbus_interface="org.freedesktop.login1.Manager",
+        bus_name="org.freedesktop.login1",
+        path="/org/freedesktop/login1")
+    print("Ready. Waiting for suspend/resume; no polling or sleep inhibitor.", flush=True)
+    GLib.MainLoop().run()
+
+
+if __name__ == "__main__":
+    main()
+FRAME_RESUME_PAYLOAD_0_END
+cat > "$stage_dir/frame-resume-dashboard.service" <<'FRAME_RESUME_PAYLOAD_1_END'
+# Managed by frame-resume-dashboard
+[Unit]
+Description=Close Steam Frame's automatic resume dashboard once
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/share/frame-resume-dashboard/resume-dashboard.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+FRAME_RESUME_PAYLOAD_1_END
+cat > "$stage_dir/uninstall.sh" <<'FRAME_RESUME_PAYLOAD_2_END'
+#!/bin/bash
+# Managed by frame-resume-dashboard
+set -euo pipefail
+install_dir="$HOME/.local/share/frame-resume-dashboard"
+unit_file="$HOME/.config/systemd/user/frame-resume-dashboard.service"
+if [[ ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
+    echo 'No managed installation found.'
+    exit 0
+fi
+systemctl --user disable --now frame-resume-dashboard.service
+rm -f -- "$unit_file" "$install_dir/resume-dashboard.py" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
+rmdir -- "$install_dir" 2>/dev/null || true
+systemctl --user daemon-reload
+systemctl --user reset-failed frame-resume-dashboard.service 2>/dev/null || true
+echo 'Uninstalled. Normal dashboard-on-resume behaviour is restored.'
+FRAME_RESUME_PAYLOAD_2_END
+cat > "$stage_dir/install.sh" <<'FRAME_RESUME_PAYLOAD_3_END'
+#!/bin/bash
+# Managed by frame-resume-dashboard
+set -euo pipefail
+if [[ $EUID == 0 ]]; then
+    echo 'Run this as your normal Frame user, without sudo.' >&2
+    exit 1
+fi
+package_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+install_dir="$HOME/.local/share/frame-resume-dashboard"
+unit_dir="$HOME/.config/systemd/user"
+unit_file="$unit_dir/frame-resume-dashboard.service"
+test -x /opt/steamvr/bin/linuxarm64/vrcmd || { echo 'SteamVR for Frame was not found.' >&2; exit 1; }
+/usr/bin/python3 -c 'import dbus; from gi.repository import Gio, GLib'
+if [[ -e "$install_dir" && ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
+    echo "Refusing to overwrite an unrelated folder: $install_dir" >&2
+    exit 1
+fi
+if [[ -e "$unit_file" || -L "$unit_file" ]]; then
+    if ! grep -qFx '# Managed by frame-resume-dashboard' "$unit_file"; then
+        echo "Refusing to overwrite an unrelated service: $unit_file" >&2
+        exit 1
+    fi
+fi
+# Preserve the last installed helper on upgrades; no Steam settings are edited.
+if [[ -f "$install_dir/resume-dashboard.py" ]]; then
+    backup_dir="$HOME/.local/state/frame-resume-dashboard/previous-install"
+    mkdir -p -- "$backup_dir"
+    cp -p -- "$install_dir/resume-dashboard.py" "$backup_dir/"
+    if [[ -f "$unit_file" ]]; then cp -p -- "$unit_file" "$backup_dir/"; fi
+    systemctl --user stop frame-resume-dashboard.service
+fi
+mkdir -p -- "$install_dir" "$unit_dir"
+install -m 644 -- "$package_dir/resume-dashboard.py" "$install_dir/resume-dashboard.py"
+install -m 755 -- "$package_dir/uninstall.sh" "$install_dir/uninstall.sh"
+touch -- "$install_dir/.managed-by-frame-resume-dashboard"
+install -m 644 -- "$package_dir/frame-resume-dashboard.service" "$unit_file"
+systemctl --user daemon-reload
+systemctl --user enable frame-resume-dashboard.service
+systemctl --user restart frame-resume-dashboard.service
+systemctl --user is-active --quiet frame-resume-dashboard.service
+echo 'Installed. Leave your VR environment running, then suspend and wake to test.'
+FRAME_RESUME_PAYLOAD_3_END
+bash "$stage_dir/install.sh"

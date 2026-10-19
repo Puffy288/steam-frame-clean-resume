@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.run -text
+source/* -text
+*.jpg binary
