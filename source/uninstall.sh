@@ -8,7 +8,7 @@ if [[ ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
     exit 0
 fi
 systemctl --user disable --now frame-resume-dashboard.service
-rm -f -- "$unit_file" "$install_dir/resume-dashboard.py" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
+rm -f -- "$unit_file" "$install_dir/resume-dashboard" "$install_dir/resume-dashboard.c" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
 rmdir -- "$install_dir" 2>/dev/null || true
 systemctl --user daemon-reload
 systemctl --user reset-failed frame-resume-dashboard.service 2>/dev/null || true

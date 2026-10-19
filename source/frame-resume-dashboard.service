@@ -1,10 +1,11 @@
 # Managed by frame-resume-dashboard
 [Unit]
-Description=Close Steam Frame's automatic resume dashboard once
+Description=Steam Frame Clean Resume
 
 [Service]
-Type=simple
-ExecStart=/usr/bin/python3 %h/.local/share/frame-resume-dashboard/resume-dashboard.py
+Type=notify
+ExecStart=%h/.local/share/frame-resume-dashboard/resume-dashboard
+TimeoutStartSec=10
 Restart=on-failure
 RestartSec=10
 
