@@ -1,0 +1,12 @@
+# Managed by frame-resume-dashboard
+[Unit]
+Description=Close Steam Frame's automatic resume dashboard once
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/share/frame-resume-dashboard/resume-dashboard.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
