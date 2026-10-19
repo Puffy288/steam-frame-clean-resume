@@ -25,18 +25,20 @@ Running setup again updates the same helper without creating duplicates. No admi
 
 ### Never used Desktop or Konsole on Frame?
 
-With the default Frame controls, point and pull the **trigger** to select. Press the **thumbstick inward** for the context menu, then select an item with the trigger.
+Start by opening this GitHub page in **Chromium on your Frame**, so you can download the installer and copy the command there.
 
-1. Press the controller’s **Steam button**, then select **+ (Launch Program) → Desktop** in the dashboard dock.
-2. Open the desktop’s **application menu at the bottom left**, search for **Konsole** (with a **K**) and select it. Use the VR window’s **keyboard button** for the on-screen keys, selecting them with the trigger.
-3. In this guide, hold the trigger and drag across the whole command to select it. Release the trigger, press the thumbstick inward over the selection, then select **Copy**.
-4. Select the dark area in Konsole with the trigger, press the thumbstick inward, and select **Paste**. Open the window’s on-screen keyboard and select **Enter**.
+With the default Frame controls, point and pull the **trigger** to select. Press the **thumbstick inward** for the context menu, then select an item with the trigger. Use the VR window’s **keyboard button** for the on-screen keys.
+
+1. **Open Chromium.** Press the controller’s **Steam button**, then select **+ (Launch Program) → Desktop** in the dashboard dock. Open the desktop’s **application menu at the bottom left**, search for **Chromium** and open it. If you see **Install Chromium**, select it, follow its Install button, then open Chromium.
+2. **Open this page and download the installer.** Select Chromium’s address bar, enter **https://github.com/Puffy288/steam-frame-clean-resume** using the on-screen keyboard, and select **Enter**. In this page’s **Install** section, select **Download Steam-Frame-Resume-Install.run** and save it in **Downloads**.
+3. **Open Konsole and copy the command.** Open the desktop’s application menu again, search for **Konsole** (with a **K**) and open it. Return to this GitHub page in Chromium and press the **copy button at the right of the command box** in the **Install** section. This copies the whole command without selecting the text manually.
+4. **Paste and install.** Select the dark area in Konsole with the trigger, press the thumbstick inward, and select **Paste**. Open the window’s on-screen keyboard and select **Enter**. Wait for **Installed**.
 
 ![Konsole open in the Steam Frame dashboard](docs/screenshots/konsole-on-frame.jpg)
 
 The keyboard button is below the window, on the left of its small control bar.
 
-Reading on another device? Open this guide and download the installer on your Frame. Find **Chromium**, the web browser, in the same desktop application menu. If it offers **Install Chromium**, select that first and follow its Install button.
+Guide updated 19 October 2026.
 
 ## Confirm it worked
 
