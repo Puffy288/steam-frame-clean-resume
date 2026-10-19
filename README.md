@@ -12,7 +12,7 @@ Unofficial installer for keeping the SteamVR dashboard closed on resume. *Create
 
 ## Install
 
-1. On your **Frame**, select [**Download Steam-Frame-Resume-Install.run**](https://github.com/Puffy288/steam-frame-clean-resume/releases/download/v0.1.0/Steam-Frame-Resume-Install.run) and save it in **Downloads**.
+1. On your **Frame**, select [**Download Steam-Frame-Resume-Install.run**](https://github.com/Puffy288/steam-frame-clean-resume/releases/download/v0.2.0/Steam-Frame-Resume-Install.run) and save it in **Downloads**.
 2. Open **Konsole**, then copy and paste this whole command:
 
 ```bash
@@ -21,7 +21,7 @@ bash ~/Downloads/Steam-Frame-Resume-Install.run
 
 3. Select **Enter** on the on-screen keyboard. Wait for **Installed**. You can close Konsole afterwards.
 
-Running setup again updates the same helper without creating duplicates. No administrator password is needed.
+Running this same installer again does not create duplicates. No administrator password is needed.
 
 ### Never used Desktop or Konsole on Frame?
 
@@ -46,17 +46,18 @@ Leave your VR environment or game running. Press **Power** to suspend, then wake
 
 A small background helper waits for SteamOS’s resume event and sends SteamVR’s built-in dashboard-close request **once**. It does not poll or keep the headset awake. It leaves tracking, boundaries, graphics, game launching and Steam settings alone.
 
-The installer and helper make **no internet requests or uploads** and need no administrator password or debugging mode. The installer is readable text containing all the code. It briefly reads the existing SteamVR log to check for dashboard use, without sending it anywhere.
+**Measured idle RAM:** about **0.3 MB (0.002% of Frame RAM)** for the helper, with no measurable idle CPU use. Linux’s whole-service reading after resume was **4.5 MB (0.028%)**, including about **4 MB of reclaimable file cache**. Measured on SteamOS 0.5.6, 19 October 2026; readings vary.
+
+The installer and helper make **no internet requests or uploads** and need no administrator password or debugging mode. The installer includes the compiled native helper and its readable C source. Python and a compiler are not needed to install or run it. It briefly reads the existing SteamVR log to check for dashboard use, without sending it anywhere.
 
 <details>
 <summary>Exactly where it installs</summary>
 
 `~` means your home folder. Everything persistent goes inside it:
 
-- `~/.local/share/frame-resume-dashboard/`: helper, uninstaller and ownership marker.
+- `~/.local/share/frame-resume-dashboard/`: native helper, C source, uninstaller and ownership marker.
 - `~/.config/systemd/user/frame-resume-dashboard.service`: startup service.
 - `~/.config/systemd/user/default.target.wants/frame-resume-dashboard.service`: startup link.
-- `~/.local/state/frame-resume-dashboard/previous-install/`: backup of the previous helper and service when reinstalling.
 
 Setup removes its temporary `/tmp/frame-resume-dashboard.*` folder on exit. The downloaded installer stays in Downloads. Status messages go to the normal user service journal. No existing Steam configuration is edited, so none needs restoring.
 
@@ -70,7 +71,7 @@ Copy this into Konsole using the same controller steps:
 bash ~/.local/share/frame-resume-dashboard/uninstall.sh
 ```
 
-Select **Enter** on the on-screen keyboard. This stops and removes the helper, service and startup link. Normal dashboard-on-resume behaviour returns. Previous-install backups and the downloaded installer remain as ordinary, inactive files. Delete them in the file manager if you want.
+Select **Enter** on the on-screen keyboard. This stops and removes the helper, service and startup link. Normal dashboard-on-resume behaviour returns. The downloaded installer remains as an ordinary, inactive file. Delete it in the file manager if you want.
 
 Tested with an actual suspend/resume cycle and normal Steam-button dashboard access on SteamOS 0.5.6, 19 October 2026. Reinstallation and uninstall were also verified.
 

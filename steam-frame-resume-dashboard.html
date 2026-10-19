@@ -27,7 +27,7 @@
 <li>Open <strong>Konsole</strong>, then copy and paste this whole command:</li>
 </ol>
 <pre><code>bash ~/Downloads/Steam-Frame-Resume-Install.run</code></pre>
-<p>Select <strong>Enter</strong> on the on-screen keyboard. Wait for <strong>Installed</strong>. You can close Konsole afterwards. Running the installer again updates the same helper. It does not create duplicates.</p>
+<p>Select <strong>Enter</strong> on the on-screen keyboard. Wait for <strong>Installed</strong>. You can close Konsole afterwards. Running this same installer again does not create duplicates.</p>
 
 <details id="beginners" open>
 <summary>Never used Desktop or Konsole on Frame?</summary>
@@ -51,16 +51,16 @@
 <section>
 <h2>What it changes</h2>
 <p>A small background helper waits for SteamOS’s resume event and sends SteamVR’s built-in dashboard-close request <strong>once</strong>. It uses no polling or sleep inhibitor. It does not change tracking, boundaries, graphics, game launching, or Steam settings.</p>
-<p><strong>No administrator password or debugging mode is needed.</strong> The installer and helper make no internet requests or uploads. The installer is readable text containing all the code. It briefly reads the existing SteamVR log to check for dashboard use, and never sends that log anywhere.</p>
+<p><strong>Measured idle RAM:</strong> about <strong>0.3 MB (0.002% of Frame RAM)</strong> for the helper, with no measurable idle CPU use. Linux’s whole-service reading after resume was <strong>4.5 MB (0.028%)</strong>, including about <strong>4 MB of reclaimable file cache</strong>. Measured on SteamOS 0.5.6, 19 October 2026; readings vary.</p>
+<p><strong>No administrator password or debugging mode is needed.</strong> The installer and helper make no internet requests or uploads. The installer includes the compiled native helper and its readable C source. Python and a compiler are not needed to install or run it. It briefly reads the existing SteamVR log to check for dashboard use, and never sends that log anywhere.</p>
 
 <details>
 <summary>Exactly where it installs</summary>
 <p><code>~</code> means your home folder. Everything persistent is inside it:</p>
 <ul>
-<li><code>~/.local/share/frame-resume-dashboard/</code>: the helper, uninstaller and ownership marker.</li>
+<li><code>~/.local/share/frame-resume-dashboard/</code>: the native helper, C source, uninstaller and ownership marker.</li>
 <li><code>~/.config/systemd/user/frame-resume-dashboard.service</code>: its startup service.</li>
 <li><code>~/.config/systemd/user/default.target.wants/frame-resume-dashboard.service</code>: the link that enables startup.</li>
-<li><code>~/.local/state/frame-resume-dashboard/previous-install/</code>: a backup of the previous helper and service when reinstalling.</li>
 </ul>
 <p>Setup uses a temporary <code>/tmp/frame-resume-dashboard.*</code> folder and removes it when it finishes. The downloaded installer stays in Downloads. Status messages go to the normal user service journal. No existing Steam configuration is edited, so none needs restoring.</p>
 </details>
@@ -70,7 +70,7 @@
 <h2>Uninstall</h2>
 <p>Copy this into Konsole using the same controller steps:</p>
 <pre><code>bash ~/.local/share/frame-resume-dashboard/uninstall.sh</code></pre>
-<p>Select <strong>Enter</strong> on the on-screen keyboard. This stops and removes the helper, service and startup link. The usual dashboard-on-resume behaviour returns. Any previous-install backup and downloaded installer remain as ordinary, inactive files. You can delete them in the file manager.</p>
+<p>Select <strong>Enter</strong> on the on-screen keyboard. This stops and removes the helper, service and startup link. The usual dashboard-on-resume behaviour returns. The downloaded installer remains as an ordinary, inactive file. You can delete it in the file manager.</p>
 </section>
 
 <footer>

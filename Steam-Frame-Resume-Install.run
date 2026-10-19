@@ -1,8 +1,8 @@
 #!/bin/bash
-# Steam Frame resume dashboard helper — unofficial, user-local and reversible.
-# This is plain-text source. It makes no internet requests and needs no sudo.
+# Steam Frame Clean Resume 0.2.0: fresh, user-local native installation.
+# Includes the ARM64 executable and readable C source. No download or sudo.
 # Install: bash ~/Downloads/Steam-Frame-Resume-Install.run
-# Remove:  bash ~/.local/share/frame-resume-dashboard/uninstall.sh
+# Remove: bash ~/.local/share/frame-resume-dashboard/uninstall.sh
 set -euo pipefail
 if [[ $EUID == 0 ]]; then
     echo 'Run this as your normal Frame user, without sudo.' >&2
@@ -11,168 +11,384 @@ fi
 umask 077
 stage_dir=$(mktemp -d /tmp/frame-resume-dashboard.XXXXXXXX)
 trap 'rm -rf -- "$stage_dir"' EXIT
-cat > "$stage_dir/resume-dashboard.py" <<'FRAME_RESUME_PAYLOAD_0_END'
-#!/usr/bin/python3
-"""Close Steam's automatic post-suspend dashboard once; never inhibit sleep."""
-import os
-from pathlib import Path
-import subprocess
+base64 -d <<'FRAME_RESUME_BINARY_END' | gzip -dc > "$stage_dir/resume-dashboard"
+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
+X44ps5l+hLXnMV2STJlv9Y/Ji23jZ2ZkzaiZn4UhZ1lDIdNZOjLTGs+UTP5ofma/21mhJtnyz7ON
+78u0OT6BUaNMl1m8NNOtfp5l+mE20CTTc/6f103ZRSj/nnLpeeHvMzGFmWouW9FPsYX3cpEp3yjK
+tKuvq6uWi+s33nSVvKjCXe5eJJeXlVeULS1blNG0xL3IbFpSVlW+jBB3tD2qa7rSQtyBkK5qEeIO
+hXXV3RbqdLd0BoL+koCfUTW1a0t0pY0Ybe1KtJ24/d2haHeHKXXNbOlStWggHMpQvNCmqUGFGrJv
+kaBOUwbgp65ugZ+toEBb2K/oCnGr7d5WTelQve1+bVwzPbyKpindpof1HQIrHQEfZA1DLDNGSzRK
+3L5wR4ca0v/P05LP9k5rf1kqZso5Nnv7aihgz7jl3yRmystt9i6b/nWb/xYxU8oX8F8Mn89hr7H8
+rf3Ykta+nWXb3yxcz2og2vZrS464xvdzifO39s3VjBdt+78lrf3eqX4b2V5q+Vv7pyXvsPVftMlN
+bG+2dGt/tuQhMnH/LdzBairazgtLWueFvX7W+HXmX2s7fyxpnVdZ7Iyz+9/DapJtO6/H5AXmv9vm
+b9+/joqZ9tNt/g/Y/Mf2KSZjeZn2Hpv/d23+1v3CkoUX6P9O2/O3e16mfED6av/HbP6zFmRK/wXy
+P2Pzjy3IlO8L9n07E33wmcrdA6z7VPH5ie1zbfJn8JnG+Vv3rbK/0v81bm3z59VS5j9dzLyP5drW
+wQk2fvt9a80o2weEr85/yuY/Xkk2DvLV9XubcWPjZ/5lzD/3AvvvIOPseSz/Sgd/XkoTnAutzOKj
+C+T/X6svvLTQBwEA
+FRAME_RESUME_BINARY_END
+chmod 755 "$stage_dir/resume-dashboard"
+cat > "$stage_dir/resume-dashboard.c" <<'FRAME_RESUME_TEXT_0_END'
+/* Steam Frame Clean Resume: one immediate, guarded close per suspend/resume.
+ * No network requests, polling, inhibitors, settings edits or shell execution.
+ */
+#define _GNU_SOURCE
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <poll.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <spawn.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <sys/wait.h>
+#include <systemd/sd-bus.h>
+#include <systemd/sd-daemon.h>
+#include <time.h>
+#include <unistd.h>
 
-import dbus
-from dbus.mainloop.glib import DBusGMainLoop
-from gi.repository import Gio, GLib
+extern char **environ;
+#define VERSION "native-0.2.0"
+#define VR_COMMAND "/opt/steamvr/bin/linuxarm64/vrcmd"
+#define MAX_LOG_UPDATE 131072U
 
-LOG = Path.home() / ".local/share/Steam/logs/vrwebhelper_systemui.txt"
-COMMAND = Path("/opt/steamvr/bin/linuxarm64/vrcmd")
-RESUME_DELAY_MS = 1
+struct helper {
+    const char *log_path;
+    int checkpoint;
+    bool dry_run;
+    int (*close_action)(void);
+};
 
+static void disarm(struct helper *h) {
+    if (h->checkpoint >= 0)
+        close(h->checkpoint);
+    h->checkpoint = -1;
+}
 
-class ResumeDashboard:
-    def __init__(self):
-        self.file = None
-        self.monitor = None
-        self.pending = 0
-        self.active = False
-        self.partial = b""
+static bool same_log(int fd, const char *path, off_t minimum_size) {
+    struct stat opened, named;
+    return fstat(fd, &opened) == 0 && lstat(path, &named) == 0 &&
+        S_ISREG(opened.st_mode) && S_ISREG(named.st_mode) &&
+        opened.st_dev == named.st_dev && opened.st_ino == named.st_ino &&
+        opened.st_size >= minimum_size;
+}
 
-    def stop(self, reason=None):
-        self.active = False
-        for name in ("pending",):
-            source = getattr(self, name)
-            if source:
-                GLib.source_remove(source)
-                setattr(self, name, 0)
-        if self.monitor:
-            self.monitor.cancel()
-            self.monitor = None
-        if self.file:
-            self.file.close()
-            self.file = None
-        self.partial = b""
-        if reason:
-            print(reason, flush=True)
+/* Bounded streaming scan, including markers split across reads. Keep only
+ * the last 63 bytes between reads; no permanent log buffer or file watcher.
+ * A partial marker line is conservatively treated as dashboard use too.
+ */
+static bool dashboard_untouched(int fd, const char *path) {
+    static const char toggle[] = "[Dashboard] [ToggleDashboard]";
+    static const char hide[] = "[Dashboard] [HideDashboard]";
+    off_t offset = lseek(fd, 0, SEEK_CUR);
+    if (offset < 0 || !same_log(fd, path, offset))
+        return false;
+    char buffer[4096 + 64];
+    size_t carry = 0, total = 0;
+    for (;;) {
+        size_t remaining = MAX_LOG_UPDATE + 1U - total;
+        size_t count = remaining < 4096 ? remaining : 4096;
+        ssize_t n = read(fd, buffer + carry, count);
+        if (n < 0 && errno == EINTR)
+            continue;
+        if (n < 0)
+            return false;
+        if (n == 0)
+            break;
+        total += (size_t)n;
+        if (total > MAX_LOG_UPDATE)
+            return false;
+        size_t length = carry + (size_t)n;
+        if (memmem(buffer, length, toggle, sizeof(toggle) - 1) ||
+            memmem(buffer, length, hide, sizeof(hide) - 1))
+            return false;
+        carry = length < 63 ? length : 63;
+        memmove(buffer, buffer + length - carry, carry);
+    }
+    return same_log(fd, path, offset + (off_t)total);
+}
 
-    def sleep_changed(self, sleeping):
-        if sleeping:
-            self.stop()
-            try:
-                self.file = LOG.open("rb")
-                self.file.seek(0, os.SEEK_END)
-            except OSError as error:
-                self.stop(f"Skipping this cycle: cannot read SteamVR log ({error}).")
-            return
-        # A service start, duplicate signal or screen-off event must not close UI.
-        if self.file is None or self.active:
-            return
-        try:
-            self.monitor = Gio.File.new_for_path(str(LOG)).monitor_file(
-                Gio.FileMonitorFlags.NONE, None)
-            self.monitor.set_rate_limit(0)
-            self.monitor.connect("changed", self.changed)
-            self.active = True
-            self.pending = GLib.timeout_add(RESUME_DELAY_MS, self.close_once)
-            print("Resume detected; closing the dashboard immediately.", flush=True)
-            self.drain()
-        except (OSError, GLib.Error) as error:
-            self.stop(f"Skipping this cycle: {error}")
+static int64_t monotonic_ms(void) {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) < 0)
+        return -1;
+    return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
 
-    def changed(self, *_):
-        self.drain()
+/* Wait on the exact child process, with a deadline, only while it is running.
+ * pidfd polling blocks in the kernel; this is not a periodic background check.
+ */
+static int run_bounded(const char *path, char *const argv[], int timeout_ms) {
+    posix_spawn_file_actions_t actions;
+    int error = posix_spawn_file_actions_init(&actions);
+    if (error)
+        return -error;
+    error = posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO,
+                                           "/dev/null", O_WRONLY, 0);
+    if (!error)
+        error = posix_spawn_file_actions_adddup2(&actions, STDOUT_FILENO, STDERR_FILENO);
+    pid_t child = -1;
+    if (!error)
+        error = posix_spawn(&child, path, &actions, NULL, argv, environ);
+    posix_spawn_file_actions_destroy(&actions);
+    if (error)
+        return -error;
 
-    def drain(self):
-        if not self.active:
-            return
-        try:
-            disk = LOG.stat()
-            opened = os.fstat(self.file.fileno())
-            if (disk.st_dev, disk.st_ino) != (opened.st_dev, opened.st_ino):
-                self.stop("Skipped: SteamVR log rotated.")
-                return
-            if disk.st_size < self.file.tell():
-                self.stop("Skipped: SteamVR log was reset.")
-                return
-            data = self.partial + self.file.read(131073)
-            if len(data) > 131072:
-                self.stop("Skipped: unusually large log update.")
-                return
-            lines = data.split(b"\n")
-            self.partial = lines.pop()
-            for raw in lines:
-                line = raw.decode("utf-8", "replace")
-                if "[Dashboard] [ToggleDashboard]" in line or "[Dashboard] [HideDashboard]" in line:
-                    self.stop("Skipped: dashboard was already used or closed.")
-                    return
-        except OSError as error:
-            self.stop(f"Skipped: log read failed ({error}).")
+    int pidfd = (int)syscall(SYS_pidfd_open, child, 0);
+    int result = pidfd < 0 ? -errno : 0;
+    int64_t started = monotonic_ms();
+    if (started < 0 && result == 0)
+        result = -EIO;
+    while (result == 0) {
+        int64_t now = monotonic_ms();
+        if (now < 0) {
+            result = -EIO;
+            break;
+        }
+        int64_t remaining = started + timeout_ms - now;
+        if (remaining <= 0) {
+            result = -ETIMEDOUT;
+            break;
+        }
+        struct pollfd watched = { .fd = pidfd, .events = POLLIN };
+        int n = poll(&watched, 1, remaining > INT_MAX ? INT_MAX : (int)remaining);
+        if (n < 0 && errno == EINTR)
+            continue;
+        if (n < 0) {
+            result = -errno;
+            break;
+        }
+        if (n == 0) {
+            result = -ETIMEDOUT;
+            break;
+        }
+        if (watched.revents & POLLIN)
+            break;
+        result = -EIO;
+    }
+    if (result < 0)
+        /* An unreaped child PID cannot be reused for an unrelated process. */
+        kill(child, SIGKILL);
+    if (pidfd >= 0)
+        close(pidfd);
+    int status = 0;
+    pid_t reaped;
+    do {
+        reaped = waitpid(child, &status, 0);
+    } while (reaped < 0 && errno == EINTR);
+    if (result < 0)
+        return result;
+    if (reaped < 0)
+        return -errno;
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -ECHILD;
+}
 
-    def close_once(self):
-        self.pending = 0
-        # Check for a last-moment Steam-button action before sending the request.
-        self.drain()
-        if not self.active:
-            return GLib.SOURCE_REMOVE
-        self.stop()
-        try:
-            result = subprocess.run(
-                [str(COMMAND), "--background", "--hidedashboard"],
-                capture_output=True, text=True, timeout=3, check=False)
-            if result.returncode == 0:
-                print("Sent one dashboard-close request. Idle until the next suspend/resume.", flush=True)
-            else:
-                print(f"Close request failed (exit {result.returncode}); no retry.", flush=True)
-        except (OSError, subprocess.TimeoutExpired) as error:
-            print(f"Close request failed ({error}); no retry.", flush=True)
-        return GLib.SOURCE_REMOVE
+static int close_dashboard(void) {
+    char *const args[] = { VR_COMMAND, "--background", "--hidedashboard", NULL };
+    return run_bounded(VR_COMMAND, args, 3000);
+}
 
-def main():
-    DBusGMainLoop(set_as_default=True)
-    helper = ResumeDashboard()
-    bus = dbus.SystemBus()
-    bus.add_signal_receiver(
-        helper.sleep_changed,
-        signal_name="PrepareForSleep",
-        dbus_interface="org.freedesktop.login1.Manager",
-        bus_name="org.freedesktop.login1",
-        path="/org/freedesktop/login1")
-    print("Ready. Waiting for suspend/resume; no polling or sleep inhibitor.", flush=True)
-    GLib.MainLoop().run()
+static void sleep_changed(struct helper *h, bool sleeping) {
+    if (sleeping) {
+        disarm(h);
+        int fd = open(h->log_path, O_RDONLY | O_CLOEXEC | O_NONBLOCK | O_NOFOLLOW);
+        struct stat st;
+        if (fd < 0 || fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) ||
+            lseek(fd, 0, SEEK_END) < 0) {
+            if (fd >= 0)
+                close(fd);
+            puts("Skipping this cycle: SteamVR log unavailable.");
+            return;
+        }
+        h->checkpoint = fd;
+        return;
+    }
+    /* Starting/restarting the service, screen-off and duplicate resume signals
+     * never close the dashboard. Disarm before attempting any close request.
+     */
+    if (h->checkpoint < 0)
+        return;
+    int fd = h->checkpoint;
+    h->checkpoint = -1;
+    bool clear = dashboard_untouched(fd, h->log_path);
+    close(fd);
+    if (!clear) {
+        puts("Skipped: dashboard was used, or SteamVR log changed unexpectedly.");
+        return;
+    }
+    if (h->dry_run) {
+        puts("Dry run: resume accepted; no dashboard command sent.");
+        return;
+    }
+    puts("Resume detected; sending one dashboard-close request immediately.");
+    int result = h->close_action();
+    if (result == 0)
+        puts("Close request completed. Idle until the next suspend/resume.");
+    else
+        printf("Close request failed (%d); no retry.\n", result);
+}
 
+static int bus_signal(sd_bus_message *message, void *userdata, sd_bus_error *error) {
+    (void)error;
+    if (strcmp(sd_bus_message_get_signature(message, true), "b") != 0)
+        return 0;
+    int sleeping;
+    if (sd_bus_message_read(message, "b", &sleeping) > 0)
+        sleep_changed(userdata, sleeping != 0);
+    return 0;
+}
 
-if __name__ == "__main__":
-    main()
-FRAME_RESUME_PAYLOAD_0_END
-cat > "$stage_dir/frame-resume-dashboard.service" <<'FRAME_RESUME_PAYLOAD_1_END'
+int main(int argc, char **argv) {
+    setvbuf(stdout, NULL, _IOLBF, 0);
+    bool dry_run = argc == 2 && strcmp(argv[1], "--dry-run") == 0;
+    if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+        puts("Steam Frame Clean Resume " VERSION);
+        return 0;
+    }
+    if (argc != 1 && !dry_run) {
+        fputs("Usage: resume-dashboard [--dry-run|--version]\n", stderr);
+        return 2;
+    }
+    const char *user_home = getenv("HOME");
+    char *log_path = NULL;
+    if (!user_home || user_home[0] != '/' ||
+        asprintf(&log_path, "%s/.local/share/Steam/logs/vrwebhelper_systemui.txt", user_home) < 0) {
+        fputs("Cannot locate the user's SteamVR log.\n", stderr);
+        return 1;
+    }
+    struct helper h = { .log_path = log_path, .checkpoint = -1,
+                       .dry_run = dry_run, .close_action = close_dashboard };
+    sd_bus *bus = NULL;
+    sd_bus_slot *slot = NULL;
+    int result = sd_bus_open_system(&bus);
+    if (result < 0)
+        goto done;
+    result = sd_bus_match_signal(bus, &slot,
+        "org.freedesktop.login1", "/org/freedesktop/login1",
+        "org.freedesktop.login1.Manager", "PrepareForSleep", bus_signal, &h);
+    if (result < 0)
+        goto done;
+    puts("Ready: native helper waiting for suspend/resume; no polling or inhibitor.");
+    (void)sd_notify(0, "READY=1\nSTATUS=Waiting for suspend/resume");
+    for (;;) {
+        result = sd_bus_process(bus, NULL);
+        if (result < 0)
+            break;
+        if (result > 0)
+            continue;
+        result = sd_bus_wait(bus, UINT64_MAX);
+        if (result < 0 && result != -EINTR)
+            break;
+    }
+done:
+    if (result < 0)
+        fprintf(stderr, "System bus error: %s\n", strerror(-result));
+    disarm(&h);
+    sd_bus_slot_unref(slot);
+    sd_bus_unref(bus);
+    free(log_path);
+    return result < 0;
+}
+FRAME_RESUME_TEXT_0_END
+cat > "$stage_dir/frame-resume-dashboard.service" <<'FRAME_RESUME_TEXT_1_END'
 # Managed by frame-resume-dashboard
 [Unit]
-Description=Close Steam Frame's automatic resume dashboard once
+Description=Steam Frame Clean Resume
 
 [Service]
-Type=simple
-ExecStart=/usr/bin/python3 %h/.local/share/frame-resume-dashboard/resume-dashboard.py
+Type=notify
+ExecStart=%h/.local/share/frame-resume-dashboard/resume-dashboard
+TimeoutStartSec=10
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=default.target
-FRAME_RESUME_PAYLOAD_1_END
-cat > "$stage_dir/uninstall.sh" <<'FRAME_RESUME_PAYLOAD_2_END'
-#!/bin/bash
-# Managed by frame-resume-dashboard
-set -euo pipefail
-install_dir="$HOME/.local/share/frame-resume-dashboard"
-unit_file="$HOME/.config/systemd/user/frame-resume-dashboard.service"
-if [[ ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
-    echo 'No managed installation found.'
-    exit 0
-fi
-systemctl --user disable --now frame-resume-dashboard.service
-rm -f -- "$unit_file" "$install_dir/resume-dashboard.py" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
-rmdir -- "$install_dir" 2>/dev/null || true
-systemctl --user daemon-reload
-systemctl --user reset-failed frame-resume-dashboard.service 2>/dev/null || true
-echo 'Uninstalled. Normal dashboard-on-resume behaviour is restored.'
-FRAME_RESUME_PAYLOAD_2_END
-cat > "$stage_dir/install.sh" <<'FRAME_RESUME_PAYLOAD_3_END'
+FRAME_RESUME_TEXT_1_END
+cat > "$stage_dir/install.sh" <<'FRAME_RESUME_TEXT_2_END'
 #!/bin/bash
 # Managed by frame-resume-dashboard
 set -euo pipefail
@@ -184,35 +400,75 @@ package_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 install_dir="$HOME/.local/share/frame-resume-dashboard"
 unit_dir="$HOME/.config/systemd/user"
 unit_file="$unit_dir/frame-resume-dashboard.service"
-test -x /opt/steamvr/bin/linuxarm64/vrcmd || { echo 'SteamVR for Frame was not found.' >&2; exit 1; }
-/usr/bin/python3 -c 'import dbus; from gi.repository import Gio, GLib'
-if [[ -e "$install_dir" && ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
-    echo "Refusing to overwrite an unrelated folder: $install_dir" >&2
-    exit 1
-fi
-if [[ -e "$unit_file" || -L "$unit_file" ]]; then
-    if ! grep -qFx '# Managed by frame-resume-dashboard' "$unit_file"; then
-        echo "Refusing to overwrite an unrelated service: $unit_file" >&2
+[[ $(uname -m) == aarch64 ]] || { echo 'This installer is for Steam Frame (ARM64).' >&2; exit 1; }
+[[ -x /opt/steamvr/bin/linuxarm64/vrcmd ]] || { echo 'SteamVR for Frame was not found.' >&2; exit 1; }
+"$package_dir/resume-dashboard" --version
+
+# Repeating this exact installation only re-enables the same service.
+# A different or unrelated installation is never overwritten.
+if [[ -e "$install_dir" || -L "$install_dir" || -e "$unit_file" || -L "$unit_file" ]]; then
+    identical=true
+    [[ ! -L "$install_dir" && ! -L "$unit_file" && -f "$install_dir/.managed-by-frame-resume-dashboard" ]] || identical=false
+    for name in resume-dashboard resume-dashboard.c uninstall.sh; do
+        cmp -s -- "$package_dir/$name" "$install_dir/$name" || identical=false
+    done
+    cmp -s -- "$package_dir/frame-resume-dashboard.service" "$unit_file" || identical=false
+    if [[ $identical != true ]]; then
+        echo 'An existing installation differs. Uninstall it first, then run this installer again.' >&2
         exit 1
     fi
+    systemctl --user daemon-reload
+    systemctl --user enable --now frame-resume-dashboard.service
+    systemctl --user is-active --quiet frame-resume-dashboard.service
+    echo 'Installed. The same native helper is enabled; no duplicate was created.'
+    exit 0
 fi
-# Preserve the last installed helper on upgrades; no Steam settings are edited.
-if [[ -f "$install_dir/resume-dashboard.py" ]]; then
-    backup_dir="$HOME/.local/state/frame-resume-dashboard/previous-install"
-    mkdir -p -- "$backup_dir"
-    cp -p -- "$install_dir/resume-dashboard.py" "$backup_dir/"
-    if [[ -f "$unit_file" ]]; then cp -p -- "$unit_file" "$backup_dir/"; fi
-    systemctl --user stop frame-resume-dashboard.service
-fi
+
+cleanup_failed_install() {
+    trap - ERR
+    systemctl --user disable --now frame-resume-dashboard.service 2>/dev/null || true
+    rm -f -- "$unit_file" "$install_dir/resume-dashboard" "$install_dir/resume-dashboard.c" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
+    rmdir -- "$install_dir" 2>/dev/null || true
+    systemctl --user daemon-reload
+    echo 'Setup did not complete; its new files were removed.' >&2
+    exit 1
+}
 mkdir -p -- "$install_dir" "$unit_dir"
-install -m 644 -- "$package_dir/resume-dashboard.py" "$install_dir/resume-dashboard.py"
+trap cleanup_failed_install ERR
+install -m 755 -- "$package_dir/resume-dashboard" "$install_dir/resume-dashboard"
+install -m 644 -- "$package_dir/resume-dashboard.c" "$install_dir/resume-dashboard.c"
 install -m 755 -- "$package_dir/uninstall.sh" "$install_dir/uninstall.sh"
 touch -- "$install_dir/.managed-by-frame-resume-dashboard"
 install -m 644 -- "$package_dir/frame-resume-dashboard.service" "$unit_file"
 systemctl --user daemon-reload
-systemctl --user enable frame-resume-dashboard.service
-systemctl --user restart frame-resume-dashboard.service
+systemctl --user enable --now frame-resume-dashboard.service
 systemctl --user is-active --quiet frame-resume-dashboard.service
+trap - ERR
 echo 'Installed. Leave your VR environment running, then suspend and wake to test.'
-FRAME_RESUME_PAYLOAD_3_END
+FRAME_RESUME_TEXT_2_END
+cat > "$stage_dir/uninstall.sh" <<'FRAME_RESUME_TEXT_3_END'
+#!/bin/bash
+# Managed by frame-resume-dashboard
+set -euo pipefail
+install_dir="$HOME/.local/share/frame-resume-dashboard"
+unit_file="$HOME/.config/systemd/user/frame-resume-dashboard.service"
+if [[ ! -f "$install_dir/.managed-by-frame-resume-dashboard" ]]; then
+    echo 'No managed installation found.'
+    exit 0
+fi
+systemctl --user disable --now frame-resume-dashboard.service
+rm -f -- "$unit_file" "$install_dir/resume-dashboard" "$install_dir/resume-dashboard.c" "$install_dir/uninstall.sh" "$install_dir/.managed-by-frame-resume-dashboard"
+rmdir -- "$install_dir" 2>/dev/null || true
+systemctl --user daemon-reload
+systemctl --user reset-failed frame-resume-dashboard.service 2>/dev/null || true
+echo 'Uninstalled. Normal dashboard-on-resume behaviour is restored.'
+FRAME_RESUME_TEXT_3_END
+cat > "$stage_dir/SHA256SUMS.txt" <<'FRAME_RESUME_CHECKSUMS_END'
+604efbdc5186e1138e3b83a5d974f7cf03d816fc167b3073f46fce0b8c171ae0  resume-dashboard
+6458f5deaad9cfce1c47ca2aa71acd0744f9e70f7f35280ab089e194ed3b5f51  resume-dashboard.c
+6a8b2973e27cc43e0d41e6e9a503453d512edf2e078ac34ce83fbff3810342fc  frame-resume-dashboard.service
+fd8db889fcee6f61b2d1a54c46006e3d5d717b36fab4773a8945474d2f876f5f  install.sh
+13a4d5962f1bafb2627b10496ca4ca5a9aea7057b3349ce7abc380648e5e28da  uninstall.sh
+FRAME_RESUME_CHECKSUMS_END
+(cd -- "$stage_dir" && sha256sum --check --status SHA256SUMS.txt)
 bash "$stage_dir/install.sh"
